@@ -32,16 +32,13 @@ func (c *MyMutex) Lock(tt time.Duration, gid int) bool {
 	}
 }
 
-func (c *MyMutex) UnLock(tt time.Duration, gid int) bool {
-	t := time.NewTimer(tt)
-	select {
-	case <-t.C:
-		fmt.Println("g", gid, " unlock failed")
-		return false
-	case <-c.c:
-		fmt.Println("g", gid, " unlock success")
+func (c *MyMutex) UnLock(islock bool, gid int) bool {
+		<-c.c
+		if islock {
+			fmt.Println("g", gid, " unlock success")
+			return true;
+		}
 		return true
-	}
 }
 
 func main() {
@@ -51,7 +48,7 @@ func main() {
 	go func() {
 		println("g1 getting lock..")
 		islock := mylock.Lock(time.Second * 3, 1)
-		defer mylock.UnLock(time.Second , 1)
+		defer mylock.UnLock(islock, 1)
 		if islock {
 			println("process 1 going...")
 			println("process 1 done")
@@ -63,7 +60,7 @@ func main() {
 	go func() {
 		println("g2 getting lock..")
 		islock := mylock.Lock(time.Second * 3, 2)
-		defer mylock.UnLock(time.Second, 2)
+		defer mylock.UnLock(islock, 2)
 		if islock {
 			println("process 2 going...")
 			println("process 2 done")
@@ -74,8 +71,8 @@ func main() {
 
 	go func() {
 		println("g3 getting lock..")
-		islock := mylock.Lock(time.Second * 3, 2)
-		defer mylock.UnLock(time.Second, 2)
+		islock := mylock.Lock(time.Second * 3, 3)
+		defer mylock.UnLock(islock, 3)
 		if islock {
 			println("process 3 going...")
 			println("process 3 done")
